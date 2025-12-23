@@ -1,6 +1,15 @@
 const board = document.querySelector(".board");
 const blockHeight = 50;
 const blockWidth = 50;
+
+const cols = Math.floor(board.clientWidth / blockWidth);
+const rows = Math.floor(board.clientHeight / blockHeight);
+let intervalId = null;
+let food = {
+  x: Math.floor(Math.random() * rows),
+  y: Math.floor(Math.random() * cols),
+};
+
 const blocks = [];
 const snack = [
   {
@@ -9,10 +18,6 @@ const snack = [
   },
 ];
 let direction = "right";
-
-const cols = Math.floor(board.clientWidth / blockWidth);
-const rows = Math.floor(board.clientHeight / blockHeight);
-let intervalId = null;
 
 // for (let i = 0; i < rows * cols; i++) {
 //   const block = document.createElement("div");
@@ -31,13 +36,10 @@ for (let row = 0; row < rows; row++) {
 }
 
 function renderSnack() {
-  snack.forEach((segment) => {
-    blocks[`${segment.x},${segment.y}`].classList.add("fill");
-  });
-}
-
-intervalId = setInterval(() => {
   let head = null;
+
+  blocks[`${food.x},${food.y}`].classList.add("food");
+
   if (direction === "left") {
     head = { x: snack[0].x, y: snack[0].y - 1 };
   } else if (direction === "right") {
@@ -53,13 +55,28 @@ intervalId = setInterval(() => {
     clearInterval(intervalId);
   }
 
+  if (head.x === food.x && head.y === food.y) {
+    blocks[`${food.x},${food.y}`].classList.remove("food");
+    food = {
+      x: Math.floor(Math.random() * rows),
+      y: Math.floor(Math.random() * cols),
+    };
+    blocks[`${food.x},${food.y}`].classList.add("food");
+    snack.unshift(head);
+  }
+
   snack.forEach((segment) => {
     blocks[`${segment.x},${segment.y}`].classList.remove("fill");
   });
 
   snack.unshift(head);
   snack.pop();
+  snack.forEach((segment) => {
+    blocks[`${segment.x},${segment.y}`].classList.add("fill");
+  });
+}
 
+intervalId = setInterval(() => {
   renderSnack();
 }, 300);
 
