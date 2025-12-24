@@ -18,7 +18,10 @@ let time = `00:00`;
 
 const cols = Math.floor(board.clientWidth / blockWidth);
 const rows = Math.floor(board.clientHeight / blockHeight);
+
 let intervalId = null;
+let timerIntervalId = null;
+
 let food = {
   x: Math.floor(Math.random() * rows),
   y: Math.floor(Math.random() * cols),
@@ -44,7 +47,6 @@ for (let row = 0; row < rows; row++) {
     const block = document.createElement("div");
     block.classList.add("block");
     board.appendChild(block);
-    block.textContent = `${row}-${col}`;
     blocks[`${row},${col}`] = block;
   }
 }
@@ -105,15 +107,25 @@ function renderSnack() {
   });
 }
 
-// intervalId = setInterval(() => {
-//   renderSnack();
-// }, 300);
-
 startBtn.addEventListener("click", () => {
   modal.style.display = "none";
   intervalId = setInterval(() => {
     renderSnack();
   }, 300);
+  timerIntervalId = setInterval(() => {
+    let [mins, secs] = time.split(":").map(Number);
+    if (secs === 59) {
+      mins++;
+      secs = 0;
+    } else {
+      secs++;
+    }
+
+    time = `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+    timeEl.textContent = time;
+  }, 1000);
 });
 
 restartBtn.addEventListener("click", restartGame);
@@ -141,6 +153,10 @@ function restartGame() {
     renderSnack();
   }, 300);
 }
+
+// function updateTime() {
+//   let [mins, secs] = time.split(":").map(Number);
+//   secs++;
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") {
