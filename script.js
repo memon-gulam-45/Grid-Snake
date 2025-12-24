@@ -12,6 +12,16 @@ const timeEl = document.querySelector("#time");
 const blockHeight = 50;
 const blockWidth = 50;
 
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const minSwipeDistance = 30;
+
+const isMobile = window.innerWidth < 768;
+const speed = isMobile ? 350 : 300;
+
 let highScore = parseInt(localStorage.getItem("highScore")) || 0;
 let score = 0;
 let time = `00:00`;
@@ -48,6 +58,54 @@ for (let row = 0; row < rows; row++) {
     block.classList.add("block");
     board.appendChild(block);
     blocks[`${row},${col}`] = block;
+  }
+}
+
+board.addEventListener(
+  "touchstart",
+  (e) => {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  },
+  { passive: false }
+);
+
+board.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+  },
+  { passive: false }
+);
+
+board.addEventListener("touchend", (e) => {
+  const touch = e.changedTouches[0];
+  touchEndX = touch.clientX;
+  touchEndY = touch.clientY;
+
+  handleSwipe();
+});
+
+function handleSwipe() {
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+
+  if (Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance) {
+    return;
+  }
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 0 && direction !== "left") {
+      direction = "right";
+    } else if (dx < 0 && direction !== "right") {
+      direction = "left";
+    }
+  } else {
+    if (dy > 0 && direction !== "up") {
+      direction = "down";
+    } else if (dy < 0 && direction !== "down") {
+      direction = "up";
+    }
   }
 }
 
@@ -111,7 +169,7 @@ startBtn.addEventListener("click", () => {
   modal.style.display = "none";
   intervalId = setInterval(() => {
     renderSnack();
-  }, 300);
+  }, speed);
   timerIntervalId = setInterval(() => {
     let [mins, secs] = time.split(":").map(Number);
     if (secs === 59) {
@@ -151,7 +209,7 @@ function restartGame() {
   };
   intervalId = setInterval(() => {
     renderSnack();
-  }, 300);
+  }, speed);
 }
 
 // function updateTime() {
