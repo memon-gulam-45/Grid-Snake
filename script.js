@@ -5,8 +5,16 @@ const startGameModal = document.querySelector(".start-game");
 const gameOverModal = document.querySelector(".game-over");
 const restartBtn = document.querySelector(".btn-restart");
 
+const highScoreEl = document.querySelector("#high-score");
+const scoreEl = document.querySelector("#score");
+const timeEl = document.querySelector("#time");
+
 const blockHeight = 50;
 const blockWidth = 50;
+
+let highScore = parseInt(localStorage.getItem("highScore")) || 0;
+let score = 0;
+let time = `00:00`;
 
 const cols = Math.floor(board.clientWidth / blockWidth);
 const rows = Math.floor(board.clientHeight / blockHeight);
@@ -56,6 +64,7 @@ function renderSnack() {
     head = { x: snack[0].x - 1, y: snack[0].y };
   }
 
+  //Collision detection logic
   if (head.x < 0 || head.x >= rows || head.y < 0 || head.y >= cols) {
     clearInterval(intervalId);
 
@@ -66,6 +75,7 @@ function renderSnack() {
     return;
   }
 
+  //Food consumption logic
   if (head.x === food.x && head.y === food.y) {
     blocks[`${food.x},${food.y}`].classList.remove("food");
     food = {
@@ -74,6 +84,14 @@ function renderSnack() {
     };
     blocks[`${food.x},${food.y}`].classList.add("food");
     snack.unshift(head);
+
+    score += 10;
+    scoreEl.textContent = score;
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("highScore", highScore.toString());
+      highScoreEl.textContent = highScore;
+    }
   }
 
   snack.forEach((segment) => {
@@ -101,9 +119,15 @@ startBtn.addEventListener("click", () => {
 restartBtn.addEventListener("click", restartGame);
 
 function restartGame() {
-  blocks[`${food.x}-${food.y}`].classList.remove("food");
+  score = 0;
+  scoreEl.textContent = score;
+  time = `00:00`;
+  timeEl.textContent = time;
+  highScoreEl.textContent = highScore;
+
+  blocks[`${food.x},${food.y}`].classList.remove("food");
   snack.forEach((segment) => {
-    blocks[`${segment.x}-${segment.y}`].classList.remove("fill");
+    blocks[`${segment.x},${segment.y}`].classList.remove("fill");
   });
   direction = "down";
 
