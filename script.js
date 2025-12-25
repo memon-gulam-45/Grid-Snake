@@ -259,6 +259,7 @@ startBtn.addEventListener("click", startGame);
 restartBtn.addEventListener("click", restartGame);
 
 window.addEventListener("resize", () => {
+  location.reload();
   clearInterval(intervalId);
   clearInterval(timerIntervalId);
   buildGrid();
@@ -270,3 +271,10 @@ window.addEventListener("resize", () => {
 highScoreEl.textContent = highScore;
 buildGrid();
 food = generateFood();
+
+/* ------------- Service Worker ------------ */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/public/service-worker.js");
+  });
+}
