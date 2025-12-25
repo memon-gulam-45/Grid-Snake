@@ -91,6 +91,20 @@ section .infos {
   flex-grow: 1;
   display: grid;
 }
+.board.flash {
+  animation: flash 0.2s;
+}
+@keyframes flash {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    background: transparent;
+  }
+}
 .block {
   width: 100%;
   height: 100%;
