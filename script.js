@@ -183,12 +183,33 @@ function restartGame() {
 
 /* ------------------ INPUT ------------------ */
 
+function feedback() {
+  board.classList.add("flash");
+  setTimeout(() => board.classList.remove("flash"), 200);
+
+  if (navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+}
+
 // Keyboard
 window.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp" && direction !== "down") direction = "up";
-  if (e.key === "ArrowDown" && direction !== "up") direction = "down";
-  if (e.key === "ArrowLeft" && direction !== "right") direction = "left";
-  if (e.key === "ArrowRight" && direction !== "left") direction = "right";
+  if (e.key === "ArrowUp" && direction !== "down") {
+    direction = "up";
+    feedback();
+  }
+  if (e.key === "ArrowDown" && direction !== "up") {
+    direction = "down";
+    feedback();
+  }
+  if (e.key === "ArrowLeft" && direction !== "right") {
+    direction = "left";
+    feedback();
+  }
+  if (e.key === "ArrowRight" && direction !== "left") {
+    direction = "right";
+    feedback();
+  }
 });
 
 // Swipe (mobile)
@@ -212,11 +233,23 @@ board.addEventListener("touchend", (e) => {
   const dy = e.changedTouches[0].clientY - sy;
 
   if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 30 && direction !== "left") direction = "right";
-    if (dx < -30 && direction !== "right") direction = "left";
+    if (dx > 30 && direction !== "left") {
+      direction = "right";
+      feedback();
+    }
+    if (dx < -30 && direction !== "right") {
+      direction = "left";
+      feedback();
+    }
   } else {
-    if (dy > 30 && direction !== "up") direction = "down";
-    if (dy < -30 && direction !== "down") direction = "up";
+    if (dy > 30 && direction !== "up") {
+      direction = "down";
+      feedback();
+    }
+    if (dy < -30 && direction !== "down") {
+      direction = "up";
+      feedback();
+    }
   }
 });
 
