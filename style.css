@@ -6,6 +6,7 @@
 
 html,
 body {
+  overscroll-behavior: none;
   height: 100%;
   width: 100%;
 }
@@ -124,4 +125,31 @@ section .infos {
 
 .modal .game-over {
   display: none;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 16px;
+  }
+  section .infos {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  .info h3 {
+    font-size: 1.1rem;
+    text-align: center;
+  }
+  .btn {
+    padding: var(--space-md) var(--space-lg);
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .info h3 {
+    font-size: 1rem;
+  }
+  .btn {
+    width: 100%;
+  }
 }
