@@ -185,7 +185,7 @@ function restartGame() {
 
 function feedback() {
   board.classList.add("flash");
-  setTimeout(() => board.classList.remove("flash"), 200);
+  setTimeout(() => board.classList.remove("flash"), 100);
 
   if (navigator.vibrate) {
     navigator.vibrate(30);
