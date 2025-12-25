@@ -9,221 +9,228 @@ const highScoreEl = document.querySelector("#high-score");
 const scoreEl = document.querySelector("#score");
 const timeEl = document.querySelector("#time");
 
-const blockHeight = 50;
-const blockWidth = 50;
-
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-
-const minSwipeDistance = 30;
-
-const isMobile = window.innerWidth < 768;
-const speed = isMobile ? 350 : 300;
+/* ------------------ GAME STATE ------------------ */
 
 let highScore = parseInt(localStorage.getItem("highScore")) || 0;
 let score = 0;
-let time = `00:00`;
-
-const cols = Math.floor(board.clientWidth / blockWidth);
-const rows = Math.floor(board.clientHeight / blockHeight);
+let time = "00:00";
 
 let intervalId = null;
 let timerIntervalId = null;
 
-let food = {
-  x: Math.floor(Math.random() * rows),
-  y: Math.floor(Math.random() * cols),
-};
+let direction = "right";
+let snack = [{ x: 1, y: 3 }];
+let food;
 
 const blocks = [];
-let snack = [
-  {
-    x: 1,
-    y: 3,
-  },
-];
-let direction = "right";
 
-// for (let i = 0; i < rows * cols; i++) {
-//   const block = document.createElement("div");
-//   block.classList.add("block");
-//   board.appendChild(block);
-// }
+let cols, rows;
+let blockSize;
 
-for (let row = 0; row < rows; row++) {
-  for (let col = 0; col < cols; col++) {
-    const block = document.createElement("div");
-    block.classList.add("block");
-    board.appendChild(block);
-    blocks[`${row},${col}`] = block;
-  }
+/* ------------------ CONFIG ------------------ */
+
+const isMobile = window.innerWidth < 768;
+const speed = isMobile ? 350 : 300;
+
+/* ------------------ GRID ------------------ */
+
+function getBlockSize() {
+  const minScreen = Math.min(window.innerWidth, window.innerHeight);
+  if (minScreen < 400) return 22;
+  if (minScreen < 768) return 28;
+  if (minScreen < 1024) return 36;
+  return 50;
 }
 
-board.addEventListener(
-  "touchstart",
-  (e) => {
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-  },
-  { passive: false }
-);
+function buildGrid() {
+  board.innerHTML = "";
+  blocks.length = 0;
 
-board.addEventListener(
-  "touchmove",
-  (e) => {
-    e.preventDefault();
-  },
-  { passive: false }
-);
+  blockSize = getBlockSize();
+  cols = Math.floor(board.clientWidth / blockSize);
+  rows = Math.floor(board.clientHeight / blockSize);
 
-board.addEventListener("touchend", (e) => {
-  const touch = e.changedTouches[0];
-  touchEndX = touch.clientX;
-  touchEndY = touch.clientY;
+  board.style.gridTemplateColumns = `repeat(${cols}, ${blockSize}px)`;
+  board.style.gridTemplateRows = `repeat(${rows}, ${blockSize}px)`;
 
-  handleSwipe();
-});
-
-function handleSwipe() {
-  const dx = touchEndX - touchStartX;
-  const dy = touchEndY - touchStartY;
-
-  if (Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance) {
-    return;
-  }
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 0 && direction !== "left") {
-      direction = "right";
-    } else if (dx < 0 && direction !== "right") {
-      direction = "left";
-    }
-  } else {
-    if (dy > 0 && direction !== "up") {
-      direction = "down";
-    } else if (dy < 0 && direction !== "down") {
-      direction = "up";
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const block = document.createElement("div");
+      block.classList.add("block");
+      board.appendChild(block);
+      blocks[`${r},${c}`] = block;
     }
   }
 }
 
-function renderSnack() {
-  let head = null;
+/* ------------------ FOOD ------------------ */
 
-  blocks[`${food.x},${food.y}`].classList.add("food");
-
-  if (direction === "left") {
-    head = { x: snack[0].x, y: snack[0].y - 1 };
-  } else if (direction === "right") {
-    head = { x: snack[0].x, y: snack[0].y + 1 };
-  } else if (direction === "down") {
-    head = { x: snack[0].x + 1, y: snack[0].y };
-  } else if (direction === "up") {
-    head = { x: snack[0].x - 1, y: snack[0].y };
-  }
-
-  //Collision detection logic
-  if (head.x < 0 || head.x >= rows || head.y < 0 || head.y >= cols) {
-    clearInterval(intervalId);
-
-    modal.style.display = "flex";
-    startGameModal.style.display = "none";
-    gameOverModal.style.display = "flex";
-
-    return;
-  }
-
-  //Food consumption logic
-  if (head.x === food.x && head.y === food.y) {
-    blocks[`${food.x},${food.y}`].classList.remove("food");
-    food = {
-      x: Math.floor(Math.random() * rows),
-      y: Math.floor(Math.random() * cols),
-    };
-    blocks[`${food.x},${food.y}`].classList.add("food");
-    snack.unshift(head);
-
-    score += 10;
-    scoreEl.textContent = score;
-    if (score > highScore) {
-      highScore = score;
-      localStorage.setItem("highScore", highScore.toString());
-      highScoreEl.textContent = highScore;
-    }
-  }
-
-  snack.forEach((segment) => {
-    blocks[`${segment.x},${segment.y}`].classList.remove("fill");
-  });
-
-  snack.unshift(head);
-  snack.pop();
-  snack.forEach((segment) => {
-    blocks[`${segment.x},${segment.y}`].classList.add("fill");
-  });
-}
-
-startBtn.addEventListener("click", () => {
-  modal.style.display = "none";
-  intervalId = setInterval(() => {
-    renderSnack();
-  }, speed);
-  timerIntervalId = setInterval(() => {
-    let [mins, secs] = time.split(":").map(Number);
-    if (secs === 59) {
-      mins++;
-      secs = 0;
-    } else {
-      secs++;
-    }
-
-    time = `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-    timeEl.textContent = time;
-  }, 1000);
-});
-
-restartBtn.addEventListener("click", restartGame);
-
-function restartGame() {
-  score = 0;
-  scoreEl.textContent = score;
-  time = `00:00`;
-  timeEl.textContent = time;
-  highScoreEl.textContent = highScore;
-
-  blocks[`${food.x},${food.y}`].classList.remove("food");
-  snack.forEach((segment) => {
-    blocks[`${segment.x},${segment.y}`].classList.remove("fill");
-  });
-  direction = "down";
-
-  modal.style.display = "none";
-  snack = [{ x: 1, y: 3 }];
-  food = {
+function generateFood() {
+  return {
     x: Math.floor(Math.random() * rows),
     y: Math.floor(Math.random() * cols),
   };
-  intervalId = setInterval(() => {
-    renderSnack();
-  }, speed);
 }
 
-// function updateTime() {
-//   let [mins, secs] = time.split(":").map(Number);
-//   secs++;
+/* ------------------ RENDER ------------------ */
 
+function renderSnack() {
+  // Draw food
+  const foodBlock = blocks[`${food.x},${food.y}`];
+  if (foodBlock) foodBlock.classList.add("food");
+
+  // Calculate new head
+  let head;
+  if (direction === "left") head = { x: snack[0].x, y: snack[0].y - 1 };
+  if (direction === "right") head = { x: snack[0].x, y: snack[0].y + 1 };
+  if (direction === "up") head = { x: snack[0].x - 1, y: snack[0].y };
+  if (direction === "down") head = { x: snack[0].x + 1, y: snack[0].y };
+
+  // Wall collision
+  if (head.x < 0 || head.x >= rows || head.y < 0 || head.y >= cols) {
+    gameOver();
+    return;
+  }
+
+  // Self collision
+  if (snack.some((seg) => seg.x === head.x && seg.y === head.y)) {
+    gameOver();
+    return;
+  }
+
+  // Add new head
+  snack.unshift(head);
+
+  // Food eaten?
+  if (head.x === food.x && head.y === food.y) {
+    if (foodBlock) foodBlock.classList.remove("food");
+    food = generateFood();
+
+    score += 10;
+    scoreEl.textContent = score;
+
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("highScore", highScore);
+      highScoreEl.textContent = highScore;
+    }
+  } else {
+    // Remove tail
+    const tail = snack.pop();
+    const tailBlock = blocks[`${tail.x},${tail.y}`];
+    if (tailBlock) tailBlock.classList.remove("fill");
+  }
+
+  // Draw snake
+  snack.forEach((seg) => {
+    const block = blocks[`${seg.x},${seg.y}`];
+    if (block) block.classList.add("fill");
+  });
+}
+
+/* ------------------ GAME CONTROL ------------------ */
+
+function startGame() {
+  modal.style.display = "none";
+  intervalId = setInterval(renderSnack, speed);
+
+  timerIntervalId = setInterval(() => {
+    let [m, s] = time.split(":").map(Number);
+    s++;
+    if (s === 60) {
+      m++;
+      s = 0;
+    }
+    time = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    timeEl.textContent = time;
+  }, 1000);
+}
+
+function gameOver() {
+  clearInterval(intervalId);
+  clearInterval(timerIntervalId);
+
+  modal.style.display = "flex";
+  startGameModal.style.display = "none";
+  gameOverModal.style.display = "flex";
+}
+
+function restartGame() {
+  clearInterval(intervalId);
+  clearInterval(timerIntervalId);
+
+  snack.forEach((seg) => {
+    const block = blocks[`${seg.x},${seg.y}`];
+    if (block) block.classList.remove("fill");
+  });
+
+  score = 0;
+  time = "00:00";
+  scoreEl.textContent = score;
+  timeEl.textContent = time;
+  highScoreEl.textContent = highScore;
+
+  direction = "right";
+  snack = [{ x: 1, y: 3 }];
+  food = generateFood();
+
+  modal.style.display = "none";
+  startGame();
+}
+
+/* ------------------ INPUT ------------------ */
+
+// Keyboard
 window.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp") {
-    direction = "up";
-  } else if (e.key === "ArrowRight") {
-    direction = "right";
-  } else if (e.key === "ArrowLeft") {
-    direction = "left";
-  } else if (e.key === "ArrowDown") {
-    direction = "down";
+  if (e.key === "ArrowUp" && direction !== "down") direction = "up";
+  if (e.key === "ArrowDown" && direction !== "up") direction = "down";
+  if (e.key === "ArrowLeft" && direction !== "right") direction = "left";
+  if (e.key === "ArrowRight" && direction !== "left") direction = "right";
+});
+
+// Swipe (mobile)
+let sx = 0,
+  sy = 0;
+board.addEventListener(
+  "touchstart",
+  (e) => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  },
+  { passive: false }
+);
+
+board.addEventListener("touchmove", (e) => e.preventDefault(), {
+  passive: false,
+});
+
+board.addEventListener("touchend", (e) => {
+  const dx = e.changedTouches[0].clientX - sx;
+  const dy = e.changedTouches[0].clientY - sy;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 30 && direction !== "left") direction = "right";
+    if (dx < -30 && direction !== "right") direction = "left";
+  } else {
+    if (dy > 30 && direction !== "up") direction = "down";
+    if (dy < -30 && direction !== "down") direction = "up";
   }
 });
+
+/* ------------------ EVENTS ------------------ */
+
+startBtn.addEventListener("click", startGame);
+restartBtn.addEventListener("click", restartGame);
+
+window.addEventListener("resize", () => {
+  clearInterval(intervalId);
+  clearInterval(timerIntervalId);
+  buildGrid();
+  restartGame();
+});
+
+/* ------------------ INIT ------------------ */
+
+highScoreEl.textContent = highScore;
+buildGrid();
+food = generateFood();
