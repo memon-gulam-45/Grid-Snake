@@ -159,6 +159,9 @@ function restartGame() {
   clearInterval(intervalId);
   clearInterval(timerIntervalId);
 
+  const oldFoodBlock = blocks[`${food.x},${food.y}`];
+  if (oldFoodBlock) oldFoodBlock.classList.remove("food");
+
   snack.forEach((seg) => {
     const block = blocks[`${seg.x},${seg.y}`];
     if (block) block.classList.remove("fill");
