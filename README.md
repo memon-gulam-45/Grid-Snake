@@ -9,7 +9,7 @@ Designed for **desktop, tablet, and mobile devices**, GridSnake delivers classic
 ## 🎮 Play Now
 
 👉 **Live Demo:**  
-[Play GridSnake](YOUR_DEPLOYED_LINK_HERE)
+[Play GridSnake](https://memon-gulam-45.github.io/Grid-Snake/)
 
 ---
 
