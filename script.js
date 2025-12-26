@@ -275,6 +275,6 @@ food = generateFood();
 /* ------------- Service Worker ------------ */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/public/service-worker.js");
+    navigator.serviceWorker.register("./public/service-worker.js");
   });
 }
